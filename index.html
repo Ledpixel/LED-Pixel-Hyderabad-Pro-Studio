@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LED Pixel Hyderabad Pro Studio — Broadcast Matrix Lighting Workstation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            studio: {
+              950: '#06080d',
+              900: '#0a0d15',
+              850: '#0f1422',
+              800: '#141c2c',
+              750: '#1b253b',
+              700: '#23304b',
+              600: '#334466',
+              500: '#4d628c',
+              400: '#758bb5',
+              300: '#a3b6dc',
+            },
+            neon: {
+              cyan: '#00f0ff',
+              pink: '#ff0055',
+              amber: '#ffb703',
+              green: '#00ff66',
+              purple: '#b026ff',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --cols: 50;
+      --rows: 40;
+    }
+    
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #0a0d15; }
+    ::-webkit-scrollbar-thumb { background: #23304b; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #00f0ff; }
+
+    /* Precision Range Sliders */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: #141c2c;
+      height: 5px;
+      border-radius: 3px;
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #00f0ff;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+      transition: all 0.15s ease-in-out;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
+      background: #ffffff;
+      box-shadow: 0 0 12px #00f0ff;
+    }
+
+    /* Simulated LED Diode Array Mask */
+    .led-optic-mesh {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: radial-gradient(circle, transparent 48%, rgba(5, 7, 12, 0.95) 68%);
+      background-size: calc(100% / var(--cols)) calc(100% / var(--rows));
+    }
+
+    /* Studio Grid background texture */
+    .studio-grid-bg {
+      background-size: 24px 24px;
+      background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+
+    /* Blinking Animations */
+    @keyframes pulseLive {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.92); }
+    }
+    .live-pulse { animation: pulseLive 1.4s ease-in-out infinite; }
+
+    @keyframes recGlow {
+      0%, 100% { box-shadow: 0 0 16px rgba(255, 0, 85, 0.6); }
+      50% { box-shadow: 0 0 4px rgba(255, 0, 85, 0.2); }
+    }
+    .recording-active { animation: recGlow 1s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-studio-950 text-slate-200 font-sans min-h-screen selection:bg-neon-cyan selection:text-black overflow-x-hidden studio-grid-bg">
+
+  <!-- Top Broadcast Application Bar -->
+  <header class="h-14 border-b border-studio-750 bg-studio-900/90 backdrop-blur-md px-4 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-neon-cyan via-studio-700 to-neon-pink p-[1px] flex items-center justify-center shadow-lg shadow-neon-cyan/20">
+          <div class="w-full h-full bg-studio-950 rounded-[7px] flex items-center justify-center font-mono font-black text-xs text-neon-cyan">
+            PX
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold tracking-wider text-sm uppercase bg-gradient-to-r from-neon-cyan via-white to-neon-pink bg-clip-text text-transparent">
+              LED Pixel Hyderabad
+            </span>
+            <span class="text-[9px] font-mono uppercase bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/30 px-1.5 py-0.5 rounded font-bold tracking-widest">
+              PRO STUDIO v4.2
+            </span>
+          </div>
+          <p class="text-[10px] text-studio-400 font-mono flex items-center gap-1.5 leading-none">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-neon-green"></span>
+            WS2811 / DDP ENGINE &bull; 800kHz DUAL-CORE LINK
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Telemetry Readout -->
+    <div class="hidden md:flex items-center gap-4 bg-studio-950/70 border border-studio-750/70 px-3 py-1.5 rounded-md font-mono text-xs">
+      <div class="flex items-center gap-1.5">
+        <span class="text-[10px] text-studio-400">STATUS:</span>
+        <span id="topLinkStatus" class="font-bold text-red-400 flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-red-500"></span> STANDALONE
+        </span>
+      </div>
+      <div class="h-3 w-px bg-studio-750"></div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[10px] text-studio-400">GRID:</span>
+        <span id="topGridTelemetry" class="font-bold text-neon-cyan">50x40 (2000px)</span>
+      </div>
+      <div class="h-3 w-px bg-studio-750"></div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[10px] text-studio-400">ENGINE:</span>
+        <span id="topFpsTelemetry" class="font-bold text-neon-green">0.0 FPS</span>
+      </div>
+      <div class="h-3 w-px bg-studio-750"></div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[10px] text-studio-400">THROUGHPUT:</span>
+        <span id="topBitrateTelemetry" class="font-bold text-neon-amber">0.0 KB/s</span>
+      </div>
+    </div>
+
+    <!-- YouTube Official Channel Launcher & Fast Actions -->
+    <div class="flex items-center gap-2.5">
+      <a href="https://youtube.com/@ledpixelhyderabad2?si=N-zoJ5xLPl5pUw9y" target="_blank" rel="noopener noreferrer" 
+         class="group flex items-center gap-2 bg-red-600/10 hover:bg-red-600/20 border border-red-600/30 hover:border-red-500 px-3 py-1.5 rounded-md text-xs font-semibold text-red-400 hover:text-white transition-all shadow-sm shadow-red-600/10">
+        <svg class="w-4 h-4 text-red-500 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+        <span class="hidden sm:inline">Official YouTube Support</span>
+        <span class="bg-red-500 text-white text-[9px] px-1.5 py-0.2 rounded font-mono font-black uppercase tracking-wider">Subscribe</span>
+      </a>
+
+      <!-- Master Blackout Toggle -->
+      <button id="masterBlackoutBtn" onclick="toggleBlackout()" 
+              class="px-3 py-1.5 bg-studio-800 hover:bg-studio-700 border border-studio-600 rounded-md text-xs font-mono font-bold text-slate-300 hover:text-white transition flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-slate-500" id="blackoutIndicator"></span>
+        BLACKOUT
+      </button>
+    </div>
+  </header>
+
+  <!-- Master Workspace Layout: Left Monitor (Stage) + Right Tabbed Command Deck -->
+  <main class="max-w-[1600px] mx-auto p-3 lg:p-4 grid grid-cols-1 xl:grid-cols-12 gap-4">
+    
+    <!-- LEFT / TOP COLUMN: DOCKED MASTER MONITOR & BROADCAST TRANSPORT (5 Cols on XL) -->
+    <section class="xl:col-span-5 flex flex-col gap-3">
+      
+      <!-- Docked Master Visualizer Console -->
+      <div class="bg-studio-900 border border-studio-750 rounded-xl overflow-hidden shadow-2xl flex flex-col">
+        <!-- Monitor Header -->
+        <div class="bg-studio-850 px-3.5 py-2.5 border-b border-studio-750 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-sm bg-neon-cyan shadow-[0_0_8px_#00f0ff]"></span>
+            <h2 class="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+              Master Stage Monitor [Program Out]
+            </h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="toggleOpticMesh()" id="meshToggleBtn" class="text-[10px] font-mono px-2 py-0.5 rounded bg-studio-750 hover:bg-studio-700 text-neon-cyan border border-studio-600 transition">
+              LED DIODES: ON
+            </button>
+            <span id="recordingBadge" class="hidden text-[9px] font-mono font-bold bg-neon-pink text-white px-2 py-0.5 rounded recording-active">
+              ● REC LIVE
+            </span>
+          </div>
+        </div>
+
+        <!-- High-Definition Screen Stage Container -->
+        <div class="p-3 bg-studio-950 flex items-center justify-center relative min-h-[260px] sm:min-h-[300px]">
+          <div class="relative w-full max-w-full aspect-[5/4] max-h-[360px] bg-black rounded-lg border border-studio-700/80 shadow-inner flex items-center justify-center overflow-hidden">
+            <!-- Program Output Canvas -->
+            <canvas id="previewCanvas" width="50" height="40" class="w-full h-full object-contain [image-rendering:pixelated]"></canvas>
+            <!-- Diode optical array simulation overlay -->
+            <div id="opticMeshOverlay" class="led-optic-mesh"></div>
+          </div>
+        </div>
+
+        <!-- Monitor Footer Scope & Transport -->
+        <div class="bg-studio-850/80 px-3.5 py-2 border-t border-studio-750 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+          <div class="flex items-center gap-3 text-studio-400 text-[11px]">
+            <span>RES: <strong class="text-slate-200" id="scopeRes">50x40</strong></span>
+            <span>CHANNELS: <strong class="text-slate-200" id="scopeChannels">6000 B</strong></span>
+            <span>ZOOM: <strong class="text-slate-200">100%</strong></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] text-studio-400">REFRESH:</span>
+            <span class="text-neon-green font-bold text-xs" id="scopeFps">0.0 FPS</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Master Level & Fader Strip -->
+      <div class="bg-studio-900 border border-studio-750 rounded-xl p-3.5 shadow-xl flex flex-col gap-3">
+        <div class="flex items-center justify-between text-xs font-mono font-bold uppercase tracking-wider text-studio-300">
+          <span class="flex items-center gap-2">
+            <svg class="w-3.5 h-3.5 text-neon-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Master Signal Attenuation
+          </span>
+          <span id="masterBrightVal" class="text-neon-amber">100% (255)</span>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <span class="text-[10px] font-mono text-studio-400 w-8">DIM</span>
+          <input type="range" id="masterBrightness" min="0" max="100" value="100" class="flex-grow accent-neon-amber" oninput="updateMasterBrightness(this.value)">
+          <span class="text-[10px] font-mono text-studio-400 w-8 text-right">BOOST</span>
+        </div>
+
+        <!-- Simulated VU Master Output Meters -->
+        <div class="grid grid-cols-2 gap-2 pt-1 font-mono text-[9px] text-studio-400">
+          <div>
+            <div class="flex justify-between mb-1"><span>CH-A RED/GRN:</span><span id="vuAVal">-3 dB</span></div>
+            <div class="w-full h-1.5 bg-studio-800 rounded-full overflow-hidden flex">
+              <div id="vuMeterA" class="h-full bg-gradient-to-r from-neon-green via-neon-amber to-neon-pink w-[75%] transition-all duration-75"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-1"><span>CH-B BLU/DIM:</span><span id="vuBVal">-4 dB</span></div>
+            <div class="w-full h-1.5 bg-studio-800 rounded-full overflow-hidden flex">
+              <div id="vuMeterB" class="h-full bg-gradient-to-r from-neon-green via-neon-amber to-neon-pink w-[68%] transition-all duration-75"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Broadcast Transport Strip -->
+      <div class="bg-studio-900 border border-studio-750 rounded-xl p-3 shadow-xl flex items-center justify-between gap-2">
+        <button onclick="toggleVideoPlayback()" id="quickPlayBtn" class="flex-1 py-2 bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan/40 text-neon-cyan rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition">
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <span id="quickPlayLabel">PLAY MEDIA</span>
+        </button>
+
+        <button onclick="triggerStrobeHit()" class="flex-1 py-2 bg-studio-800 hover:bg-studio-700 border border-studio-600 text-white rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition">
+          <svg class="w-3.5 h-3.5 text-neon-amber fill-current" viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+          FLASH STROBE
+        </button>
+
+        <button onclick="toggleMasterRecording()" id="quickRecBtn" class="flex-1 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-400 hover:text-red-300 rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+          RECORD CLIP
+        </button>
+      </div>
+
+    </section>
+
+    <!-- RIGHT COLUMN: PROFESSIONAL TABBED COMMAND WORKSPACE (7 Cols on XL) -->
+    <section class="xl:col-span-7 flex flex-col gap-3">
+      
+      <!-- Studio Navigation Ribbon -->
+      <div class="bg-studio-900 border border-studio-750 rounded-xl p-1.5 shadow-lg flex items-center gap-1 overflow-x-auto">
+        <button onclick="switchTab('mediaTab')" id="tabBtn-mediaTab" class="tab-button active px-3 py-2 rounded-lg text-xs font-mono font-bold flex items-center gap-2 transition bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/30">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          <span>MEDIA &amp; TEXT</span>
+        </button>
+
+        <button onclick="switchTab('fxTab')" id="tabBtn-fxTab" class="tab-button px-3 py-2 rounded-lg text-xs font-mono font-bold flex items-center gap-2 transition text-studio-400 hover:text-white hover:bg-studio-800">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          <span>FX RACK</span>
+        </button>
+
+        <button onclick="switchTab('dspTab')" id="tabBtn-dspTab" class="tab-button px-3 py-2 rounded-lg text-xs font-mono font-bold flex items-center gap-2 transition text-studio-400 hover:text-white hover:bg-studio-800">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+          <span>DSP CALIBRATION</span>
+        </button>
+
+        <button onclick="switchTab('recorderTab')" id="tabBtn-recorderTab" class="tab-button px-3 py-2 rounded-lg text-xs font-mono font-bold flex items-center gap-2 transition text-studio-400 hover:text-white hover:bg-studio-800">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          <span>RECORDER &amp; EXPORT</span>
+        </button>
+
+        <button onclick="switchTab('hardwareTab')" id="tabBtn-hardwareTab" class="tab-button px-3 py-2 rounded-lg text-xs font-mono font-bold flex items-center gap-2 transition text-studio-400 hover:text-white hover:bg-studio-800">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+          <span>HARDWARE &amp; I/O</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: MEDIA INGEST & TYPOGRAPHY -->
+      <div id="mediaTab" class="workspace-pane flex flex-col gap-3">
+        <!-- Video File Ingestion Card -->
+        <div class="bg-studio-900 border border-studio-750 rounded-xl p-4 shadow-xl">
+          <div class="flex items-center justify-between mb-3 border-b border-studio-750 pb-2.5">
+            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-neon-cyan flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-neon-cyan"></span>
+              Primary Video Deck [Downscaler Engine]
+            </h3>
+            <span id="videoStatusIndicator" class="text-[10px] font-mono text-studio-400">NO MEDIA LOADED</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-mono text-studio-400 mb-1.5">Ingest Any Video File (MP4, WebM, MOV, GIF):</label>
+              <input type="file" id="videoFileInput" accept="video/*" class="hidden" onchange="handleVideoUpload(event)">
+              <button onclick="document.getElementById('videoFileInput').click()" class="w-full py-2.5 px-3 bg-studio-800 hover:bg-studio-750 border border-dashed border-studio-600 hover:border-neon-cyan rounded-lg text-xs font-mono font-semibold text-slate-200 flex items-center justify-center gap-2 transition">
+                <svg class="w-4 h-4 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                <span>CHOOSE LOCAL VIDEO CLIP</span>
+              </button>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-mono text-studio-400 mb-1.5">Aspect Ratio Downscale Framing:</label>
+              <select id="aspectModeSelect" onchange="updateAspectMode(this.value)" class="w-full bg-studio-800 border border-studio-700 text-slate-200 rounded-lg p-2 text-xs font-mono outline-none focus:border-neon-cyan">
+                <option value="cover" selected>COVER (Fill &amp; Crop — Best for Full Wall)</option>
+                <option value="contain">CONTAIN (Letterbox — Zero Distortion)</option>
+                <option value="stretch">STRETCH (Anamorphic Full Grid)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-3 flex items-center justify-between gap-2 pt-2 border-t border-studio-750/70">
+            <div class="flex items-center gap-2">
+              <button onclick="toggleVideoPlayback()" id="deckPlayPauseBtn" class="px-3 py-1.5 bg-studio-800 hover:bg-studio-700 border border-studio-600 rounded text-xs font-mono font-bold text-slate-200 transition">
+                ▶ PLAY
+              </button>
+              <button onclick="stopVideoPlayback()" class="px-3 py-1.5 bg-studio-800 hover:bg-studio-700 border border-studio-600 rounded text-xs font-mono font-bold text-slate-200 transition">
+                ⏹ CLEAR
+              </button>
+            </div>
+            <div class="text-[11px] font-mono text-studio-400" id="videoMetaDisplay">00:00 / 00:00</div>
+          </div>
+        </div>
+
+        <!-- Typography & Live Text Generator Card -->
+        <div class="bg-studio-900 border border-studio-750 rounded-xl p-4 shadow-xl">
+          <div class="flex items-center justify-between mb-3 border-b border-studio-750 pb-2.5">
+            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-neon-pink flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-neon-pink"></span>
+              Live Broadcast Typography Overlay
+            </h3>
+            <span class="text-[10px] font-mono text-neon-pink uppercase">REAL-TIME RENDER</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+            <div class="md:col-span-8">
+              <label class="block text-[11px] font-mono text-studio-400 mb-1">Scrolling Message Payload:</label>
+              <div class="flex items-center gap-2">
+                <input type="text" id="liveTextInput" value="LED PIXEL HYDERABAD PRO" placeholder="Type text..." oninput="resetTextScroll()" class="flex-grow bg-studio-800 border border-studio-700 rounded-lg px-3 py-2 text-xs font-mono font-bold text-slate-100 outline-none focus:border-neon-pink">
+                <input type="color" id="textColorPicker" value="#ffff00" class="w-9 h-8 bg-transparent border-0 rounded cursor-pointer">
+              </div>
+            </div>
+            <div class="md:col-span-4">
+              <label class="block text-[11px] font-mono text-studio-400 mb-1">Contrast Border:</label>
+              <select id="textOutlineSelect" class="w-full bg-studio-800 border border-studio-700 text-slate-200 rounded-lg p-2 text-xs font-mono outline-none focus:border-neon-pink">
+                <option value="black-stroke" selected>Sharp 3px Black Outline</option>
+                <option value="none">Flat (No Border)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+            <div>
+              <div class="flex justify-between text-[11px] font-mono text-studio-400 mb-1">
+                <span>FONT SIZE</span><span id="fontSizeVal">22 px</span>
+              </div>
+              <input type="range" id="fontSizeSlider" min="10" max="42" value="22" oninput="updateFontSize(this.value)" class="w-full accent-neon-pink">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] font-mono text-studio-400 mb-1">
+                <span>V-POSITION</span><span id="textYPosVal">50%</span>
+              </div>
+              <input type="range" id="textYPosSlider" min="0" max="100" value="50" oninput="updateTextYPos(this.value)" class="w-full accent-neon-pink">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] font-mono text-studio-400 mb-1">
+                <span>SCROLL SPEED</span><span id="textSpeedVal">1.2x</span>
+              </div>
+              <input type="range" id="textSpeedSlider" min="0" max="4.0" step="0.2" value="1.2" oninput="updateTextSpeed(this.value)" class="w-full accent-neon-pink">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: STACKABLE FX COMPOSITOR -->
+      <div id="fxTab" class="workspace-pane hidden flex flex-col gap-3">
+        <div class="bg-studio-900 border border-studio-750 rounded-xl p-4 shadow-xl">
+          <div class="flex items-center justify-between mb-3 border-b border-studio-750 pb-2.5">
+            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-neon-green flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-neon-green"></span>
+              Multi-Effect Stackable Procedural Generators
+            </h3>
+            <span class="text-[10px] font-mono text-studio-400">COMBINE SIMULTANEOUSLY</span>
+          </div>
+
+          <p class="text-xs text-studio-400 mb-3 font-mono">
+            Enable multiple generators at once. Effects compute frame-by-frame and composite dynamically over your video and typography.
+          </p>
+
+          <!-- Stackable Generator Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
+            <button onclick="toggleFxSlot('rainbow')" id="fxBtn-rainbow" class="p-3 bg-neon-cyan/15 border border-neon-cyan text-neon-cyan rounded-lg text-left transition shadow-sm">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-mono font-bold uppercase">🌈 Rainbow</span>
+                <span class="w-2 h-2 rounded-full bg-neon-cyan"></span>
+              </div>
+              <p class="text-[10px] text-studio-300 font-mono">Harmonic hue spiral</p>
+            </button>
+
+            <button onclick="toggleFxSlot('fire')" id="fxBtn-fire" class="p-3 bg-studio-800 border border-studio-700 text-studio-400 rounded-lg text-left transition hover:border-studio-600">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-mono font-bold uppercase">🔥 Fire Sim</span>
+                <span class="w-2 h-2 rounded-full bg-studio-600"></span>
+              </div>
+              <p class="text-[10px] text-studio-400 font-mono">Turbulent heat dynamics</p>
+            </button>
+
+            <button onclick="toggleFxSlot('matrix')" id="fxBtn-matrix" class="p-3 bg-studio-800 border border-studio-700 text-studio-400 rounded-lg text-left transition hover:border-studio-600">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-mono font-bold uppercase">💻 Matrix Rain</span>
+                <span class="w-2 h-2 rounded-full bg-studio-600"></span>
+              </div>
+              <p class="text-[10px] text-studio-400 font-mono">Digital phosphor drops</p>
+            </button>
+
+            <button onclick="toggleFxSlot('plasma')" id="fxBtn-plasma" class="p-3 bg-studio-800 border border-studio-700 text-studio-400 rounded-lg text-left transition hover:border-studio-600">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-mono font-bold uppercase">⚡ Plasma</span>
+                <span class="w-2 h-2 rounded-full bg-studio-600"></span>
+              </div>
+              <p class="text-[10px] text-studio-400 font-mono">Sine field interference</p>
+            </button>
+
+            <button onclick="toggleFxSlot('sparkle')" id="fxBtn-sparkle" class="p-3 bg-studio-800 border border-studio-700 text-studio-400 rounded-lg text-left transition hover:border-studio-600">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-mono font-bold uppercase">✨ Sparkle</span>
+                <span class="w-2 h-2 rounded-full bg-studio-600"></span>
+              </div>
+              <p class="text-[10px] text-studio-400 font-mono">Starlight flash diodes</p>
+            </button>
+
+            <button onclick="toggleFxSlot('strobe')" id="fxBtn-strobe" class="p-3 bg-studio-800 border border-studio-700 text-studio-400 rounded-lg text-left transition hover:border-studio-600">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-mono font-bold uppercase">🚨 Strobe Sync</span>
+                <span class="w-2 h-2 rounded-full bg-studio-600"></span>
+              </div>
+              <p class="text-[10px] text-studio-400 font-mono">Periodic white pulse</p>
+            </button>
+          </div>
+
+          <!-- FX Blending & Compositing -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-studio-750">
+            <div>
+              <label class="block text-[11px] font-mono text-studio-400 mb-1">Compositing Blend Mode:</label>
+              <select id="fxBlendModeSelect" class="w-full bg-studio-800 border border-studio-700 text-slate-200 rounded-lg p-2 text-xs font-mono outline-none focus:border-neon-green">
+                <option value="screen" selected>SCREEN (Bright Neon Highlights)</option>
+                <option value="multiply">MULTIPLY (Shadow Pigment Burn)</option>
+                <option value="lighter">ADD (Overdrive Luminance)</option>
+                <option value="source-over">REPLACE (Standalone Visualizer)</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] font-mono text-studio-400 mb-1">
+                <span>DRY / WET GAIN</span><span id="fxIntensityVal">85%</span>
+              </div>
+              <input type="range" id="fxIntensitySlider" min="0" max="100" value="85" oninput="updateFxIntensity(this.value)" class="w-full accent-neon-green">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] font-mono text-studio-400 mb-1">
+                <span>GENERATOR SPEED</span><span id="fxSpeedVal">1.2x</span>
+              </div>
+              <input type="range" id="fxSpeedSlider" min="0.1" max="4.0" step="0.1" value="1.2" oninput="updateFxSpeed(this.value)" class="w-full accent-neon-green">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: DSP & VIDEO CALIBRATION -->
+      <div id="dspTab" class="workspace-pane hidden flex flex-col gap-3">
+        <div class="bg-studio-900 border border-studio-750 rounded-xl p-4 shadow-xl">
+          <div class="flex items-center justify-between mb-3 border-b border-studio-750 pb-2.5">
+            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-neon-amber flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-neon-amber"></span>
+              DSP Video Calibration &amp; WS2811 Color Balance
+            </h3>
+            <span class="text-[10px] font-mono text-neon-amber">GAMMA 2.2 LUT ACTIVE</span>
+          </div>
+
+          <!-- DSP Filters Slider Group -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <div class="flex justify-between text-[11px] font-mono text-studio-400 mb-1">
+                <span>3x3 CONVOLUTION SHARPENING</span><span id="sharpenVal">1.4x (Sharp Edge)</span>
+              </div>
+              <input type="range" id="sharpenSlider" min="0" max="3.0" step="0.2" value="1.4" oninput="updateSharpen(this.value)" class="w-full accent-neon-amber">
+              <p class="text-[10px] text-studio-500 font-mono mt-1">Restores high-frequency pixel clarity after downscaling.</p>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] font-mono text-studio-400 mb-1">
+                <span>GAMMA PERCEPTION CURVE</span><span id="gammaVal">2.20</span>
+              </div>
+              <input type="range" id="gammaSlider" min="1.0" max="3.0" step="0.1" value="2.2" oninput="updateGamma(this.value)" class="w-full accent-neon-amber">
+              <p class="text-[10px] text-studio-500 font-mono mt-1">Prevents washed-out gray shadows on physical LED diodes.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 pt-3 border-t border-studio-750">
+            <div>
+              <div class="flex justify-between text-[11px] font-mono text-studio-400 mb-1">
+                <span>DYNAMIC CONTRAST</span><span id="contrastVal">135%</span>
+              </div>
+              <input type="range" id="contrastSlider" min="80" max="220" value="135" oninput="updateContrast(this.value)" class="w-full accent-neon-amber">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] font-mono text-studio-400 mb-1">
+                <span>COLOR SATURATION</span><span id="saturationVal">140%</span>
+              </div>
+              <input type="range" id="saturationSlider" min="80" max="240" value="140" oninput="updateSaturation(this.value)" class="w-full accent-neon-amber">
+            </div>
+          </div>
+
+          <!-- WS2811 Physical Color Bias Compensation -->
+          <div class="pt-3 border-t border-studio-750">
+            <h4 class="text-[11px] font-mono font-bold uppercase tracking-wider text-studio-300 mb-2">
+              WS2811 Physical Diode Calibration (Per-Channel Trim)
+            </h4>
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <div class="flex justify-between text-[11px] font-mono text-red-400 mb-1">
+                  <span>RED TRIM</span><span id="rTrimVal">100%</span>
+                </div>
+                <input type="range" id="rGainSlider" min="30" max="100" value="100" oninput="updateRgbTrim()" class="w-full accent-red-500">
+              </div>
+              <div>
+                <div class="flex justify-between text-[11px] font-mono text-green-400 mb-1">
+                  <span>GREEN TRIM</span><span id="gTrimVal">90%</span>
+                </div>
+                <input type="range" id="gGainSlider" min="30" max="100" value="90" oninput="updateRgbTrim()" class="w-full accent-green-500">
+              </div>
+              <div>
+                <div class="flex justify-between text-[11px] font-mono text-blue-400 mb-1">
+                  <span>BLUE TRIM</span><span id="bTrimVal">90%</span>
+                </div>
+                <input type="range" id="bGainSlider" min="30" max="100" value="90" oninput="updateRgbTrim()" class="w-full accent-blue-500">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: RECORDER & MULTI-FORMAT EXPORT -->
+      <div id="recorderTab" class="workspace-pane hidden flex flex-col gap-3">
+        <div class="bg-studio-900 border border-studio-750 rounded-xl p-4 shadow-xl">
+          <div class="flex items-center justify-between mb-3 border-b border-studio-750 pb-2.5">
+            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-neon-pink flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-neon-pink"></span>
+              Live Frame Recording &amp; Multi-Format Export Studio
+            </h3>
+            <span id="recEngineFrames" class="text-[10px] font-mono text-studio-400">BUFFER: 0 FRAMES</span>
+          </div>
+
+          <p class="text-xs text-studio-400 mb-3 font-mono">
+            Bakes all video frames, procedural multipliers, text overlays, 3x3 sharpening, and gamma correction into memory for immediate preview and export.
+          </p>
+
+          <div class="flex items-center gap-2 mb-4">
+            <button onclick="toggleMasterRecording()" id="masterRecBtn" class="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-600/30 transition">
+              <span class="w-2.5 h-2.5 rounded-full bg-white animate-pulse"></span>
+              <span id="masterRecLabel">START MASTER RECORDING</span>
+            </button>
+            <button onclick="clearRecordedBuffer()" class="py-2.5 px-4 bg-studio-800 hover:bg-studio-750 border border-studio-700 text-studio-300 rounded-lg text-xs font-mono font-bold transition">
+              CLEAR BUFFER
+            </button>
+          </div>
+
+          <!-- Post-Recording Timeline Scrubber & Inspector (Hidden when empty) -->
+          <div id="recScrubberDock" class="hidden bg-studio-950 border border-studio-750 rounded-lg p-3 mb-4">
+            <div class="flex items-center justify-between mb-2 text-xs font-mono">
+              <span class="text-neon-cyan font-bold">Timeline Frame Scrub:</span>
+              <span id="scrubFrameLabel" class="text-studio-400">Frame 0 / 0</span>
+            </div>
+            <input type="range" id="timelineScrubber" min="0" max="0" value="0" class="w-full accent-neon-cyan mb-3" oninput="onScrubTimeline(this.value)">
+            
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <button onclick="togglePlaybackRecorded()" id="recPlayPauseBtn" class="px-3 py-1.5 bg-studio-800 hover:bg-studio-750 text-neon-cyan border border-studio-700 rounded text-xs font-mono font-bold">
+                  ▶ PLAY LOOP
+                </button>
+                <button onclick="toggleStreamRecordedBuffer()" id="streamRecordedBtn" class="px-3 py-1.5 bg-neon-green/10 hover:bg-neon-green/20 text-neon-green border border-neon-green/30 rounded text-xs font-mono font-bold">
+                  ⚡ RE-STREAM TO MATRIX
+                </button>
+              </div>
+              <div class="flex items-center gap-2 text-[11px] font-mono text-studio-400">
+                <span>FPS:</span>
+                <input type="number" id="recPlaybackFps" value="30" min="5" max="60" class="w-12 bg-studio-800 border border-studio-700 text-center text-slate-200 rounded py-0.5" onchange="updateRecFps(this.value)">
+              </div>
+            </div>
+          </div>
+
+          <!-- Multi-Format Broadcast Exporters -->
+          <h4 class="text-xs font-mono font-bold uppercase tracking-wider text-studio-300 mb-2">
+            Export Master File Formats:
+          </h4>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button onclick="exportBinaryRGB()" class="p-2.5 bg-studio-800 hover:bg-studio-750 border border-studio-700 hover:border-neon-cyan text-left rounded-lg transition">
+              <div class="text-xs font-mono font-bold text-neon-cyan mb-0.5">💾 .BIN FILE</div>
+              <p class="text-[10px] text-studio-400 font-mono">Raw RGB byte buffer</p>
+            </button>
+
+            <button onclick="exportControllerDat()" class="p-2.5 bg-studio-800 hover:bg-studio-750 border border-studio-700 hover:border-neon-amber text-left rounded-lg transition">
+              <div class="text-xs font-mono font-bold text-neon-amber mb-0.5">💾 .DAT FILE</div>
+              <p class="text-[10px] text-studio-400 font-mono">SD card controller data</p>
+            </button>
+
+            <button onclick="exportArduinoHeader()" class="p-2.5 bg-studio-800 hover:bg-studio-750 border border-studio-700 hover:border-neon-purple text-left rounded-lg transition">
+              <div class="text-xs font-mono font-bold text-neon-purple mb-0.5">💾 .H HEADER</div>
+              <p class="text-[10px] text-studio-400 font-mono">Arduino C++ PROGMEM</p>
+            </button>
+
+            <button onclick="exportWebMVideo()" class="p-2.5 bg-studio-800 hover:bg-studio-750 border border-studio-700 hover:border-neon-green text-left rounded-lg transition">
+              <div class="text-xs font-mono font-bold text-neon-green mb-0.5">🎬 .WEBM HD</div>
+              <p class="text-[10px] text-studio-400 font-mono">Simulated video export</p>
+            </button>
+          </div>
+          <button onclick="exportJsonMetadata()" class="mt-2 w-full py-2 bg-studio-850 hover:bg-studio-800 border border-studio-750 text-studio-400 hover:text-slate-200 rounded-lg text-xs font-mono transition">
+            📄 EXPORT PROJECT METADATA &amp; CONFIG (.JSON)
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 5: HARDWARE MATRIX & NETWORK I/O -->
+      <div id="hardwareTab" class="workspace-pane hidden flex flex-col gap-3">
+        <div class="bg-studio-900 border border-studio-750 rounded-xl p-4 shadow-xl">
+          <div class="flex items-center justify-between mb-3 border-b border-studio-750 pb-2.5">
+            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-neon-cyan flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-neon-cyan"></span>
+              Physical Matrix Topology &amp; Microcontroller Link
+            </h3>
+            <span class="text-[10px] font-mono text-neon-cyan font-bold">WS2811 / WS2812B</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-[11px] font-mono text-studio-400 mb-1">Columns (Matrix Width):</label>
+              <input type="number" id="matrixColsInput" value="50" min="4" max="256" class="w-full bg-studio-800 border border-studio-700 text-slate-100 rounded-lg p-2 text-xs font-mono outline-none focus:border-neon-cyan" onchange="reconfigureMatrixTopology()">
+            </div>
+            <div>
+              <label class="block text-[11px] font-mono text-studio-400 mb-1">Rows (Matrix Height):</label>
+              <input type="number" id="matrixRowsInput" value="40" min="4" max="256" class="w-full bg-studio-800 border border-studio-700 text-slate-100 rounded-lg p-2 text-xs font-mono outline-none focus:border-neon-cyan" onchange="reconfigureMatrixTopology()">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-[11px] font-mono text-studio-400 mb-1">Wiring Layout Route:</label>
+              <select id="wiringPatternSelect" class="w-full bg-studio-800 border border-studio-700 text-slate-100 rounded-lg p-2 text-xs font-mono outline-none focus:border-neon-cyan">
+                <option value="serpentine" selected>SERPENTINE (Zig-Zag / Snake Route)</option>
+                <option value="progressive">PROGRESSIVE (Linear Line-by-Line)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-mono text-studio-400 mb-1">Data Origin Corner:</label>
+              <select id="dataOriginSelect" class="w-full bg-studio-800 border border-studio-700 text-slate-100 rounded-lg p-2 text-xs font-mono outline-none focus:border-neon-cyan">
+                <option value="top-left" selected>Top-Left (Default DIN)</option>
+                <option value="bottom-left">Bottom-Left</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Network Protocol Link -->
+          <div class="pt-3 border-t border-studio-750">
+            <h4 class="text-xs font-mono font-bold uppercase tracking-wider text-studio-300 mb-2">
+              ESP32 High-Speed WebSocket Gateway:
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 mb-3">
+              <div class="sm:col-span-8">
+                <label class="block text-[11px] font-mono text-studio-400 mb-1">ESP32 IP Address:</label>
+                <input type="text" id="networkIpInput" value="192.168.4.1" class="w-full bg-studio-800 border border-studio-700 text-slate-100 rounded-lg px-3 py-2 text-xs font-mono outline-none focus:border-neon-cyan">
+              </div>
+              <div class="sm:col-span-4">
+                <label class="block text-[11px] font-mono text-studio-400 mb-1">Port:</label>
+                <input type="number" id="networkPortInput" value="81" class="w-full bg-studio-800 border border-studio-700 text-slate-100 rounded-lg px-3 py-2 text-xs font-mono outline-none focus:border-neon-cyan">
+              </div>
+            </div>
+
+            <button onclick="toggleWebSocketLink()" id="networkConnectBtn" class="w-full py-2.5 bg-neon-cyan text-black rounded-lg font-mono font-bold text-xs uppercase tracking-wider hover:bg-white transition flex items-center justify-center gap-2">
+              <span>CONNECT TO ESP32 MATRIX</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Official Channel Assistance Box -->
+        <div class="bg-gradient-to-br from-studio-900 to-red-950/20 border border-red-900/40 rounded-xl p-4 shadow-xl flex items-center justify-between gap-4">
+          <div>
+            <h4 class="text-xs font-mono font-bold text-white flex items-center gap-2 mb-1">
+              <svg class="w-4 h-4 text-red-500 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              <span>Need Wiring, Circuit, or Power Help?</span>
+            </h4>
+            <p class="text-xs text-studio-400">
+              Watch official hardware diagrams, ESP32 code flashing, and multi-port injection guides on our official YouTube channel.
+            </p>
+          </div>
+          <a href="https://youtube.com/@ledpixelhyderabad2?si=N-zoJ5xLPl5pUw9y" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-mono font-bold uppercase tracking-wider shrink-0 transition">
+            Watch Guides
+          </a>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Hidden Media Processing Nodes -->
+  <video id="sourceVideo" playsinline webkit-playsinline loop muted class="hidden"></video>
+
+  <!-- Non-blocking Studio Notification Toast -->
+  <div id="studioToast" class="fixed bottom-4 right-4 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-studio-900 border border-neon-cyan/50 text-white px-4 py-2.5 rounded-lg shadow-2xl font-mono text-xs flex items-center gap-2.5">
+    <span class="w-2 h-2 rounded-full bg-neon-cyan" id="toastDot"></span>
+    <span id="toastMessage">System Initialized</span>
+  </div>
+
+  <script>
+    /* STUDIO ENGINE STATE VARIABLES */
+    let COLS = 50;
+    let ROWS = 40;
+    let TOTAL_PIXELS = COLS * ROWS;
+    let masterDimmer = 1.0;
+    let isBlackout = false;
+    let isDiodesEnabled = true;
+
+    // DSP & Image Tuning
+    let gamma = 2.2;
+    let sharpenFactor = 1.4;
+    let contrastVal = 135;
+    let saturationVal = 140;
+    let rTrim = 1.0;
+    let gTrim = 0.9;
+    let bTrim = 0.9;
+
+    // Typography Overlay Engine
+    let fontSize = 22;
+    let textYPercent = 0.5;
+    let textScrollSpeed = 1.2;
+    let textPos = 50;
+
+    // Media & Video Playback State
+    let hasVideo = false;
+    let isVideoPlaying = false;
+    const video = document.getElementById('sourceVideo');
+
+    // Procedural FX Stack State
+    const activeFx = {
+      rainbow: true,
+      fire: false,
+      matrix: false,
+      plasma: false,
+      sparkle: false,
+      strobe: false,
+    };
+    let fxTime = 0;
+    let fxIntensity = 0.85;
+    let fxSpeed = 1.2;
+    let matrixDrops = [];
+
+    // Master Recording & Post-Studio State
+    let isRecording = false;
+    let recordedBuffer = [];
+    let isPlaybackRecorded = false;
+    let currentPlaybackIdx = 0;
+    let recordedPlaybackTimer = null;
+    let isStreamingRecorded = false;
+    let recordedMediaRecorder = null;
+    let recordedWebmBlobs = [];
+
+    // Telemetry and FPS State
+    let frameCount = 0;
+    let lastFpsTime = performance.now();
+    let currentFps = 0.0;
+    let totalBytesSent = 0;
+
+    // Network WebSocket Link State
+    let ws = null;
+
+    /* DOM CANVAS CONTEXTS */
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    // Offscreen render canvas for raw frames
+    const offCanvas = document.createElement('canvas');
+    const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+
+    // Offscreen FX Generator canvas
+    const fxCanvas = document.createElement('canvas');
+    const fxCtx = fxCanvas.getContext('2d', { willReadFrequently: true });
+
+    // High-Resolution Export canvas for HD WebM
+    const exportCanvas = document.createElement('canvas');
+    const exportCtx = exportCanvas.getContext('2d');
+
+    // Fast Precomputed Gamma Lookup Tables
+    let lutR = new Uint8Array(256);
+    let lutG = new Uint8Array(256);
+    let lutB = new Uint8Array(256);
+
+    function computeGammaLut() {
+      const activeDim = isBlackout ? 0 : masterDimmer;
+      for (let i = 0; i < 256; i++) {
+        let normalized = Math.pow(i / 255, gamma);
+        lutR[i] = Math.min(255, Math.round(normalized * 255 * activeDim * rTrim));
+        lutG[i] = Math.min(255, Math.round(normalized * 255 * activeDim * gTrim));
+        lutB[i] = Math.min(255, Math.round(normalized * 255 * activeDim * bTrim));
+      }
+    }
+    computeGammaLut();
+
+    /* Reconfigure Matrix Geometry */
+    function reconfigureMatrixTopology() {
+      COLS = parseInt(document.getElementById('matrixColsInput').value) || 50;
+      ROWS = parseInt(document.getElementById('matrixRowsInput').value) || 40;
+      TOTAL_PIXELS = COLS * ROWS;
+
+      canvas.width = COLS;
+      canvas.height = ROWS;
+      offCanvas.width = COLS;
+      offCanvas.height = ROWS;
+      fxCanvas.width = COLS;
+      fxCanvas.height = ROWS;
+
+      exportCanvas.width = Math.max(500, COLS * 12);
+      exportCanvas.height = Math.max(400, ROWS * 12);
+
+      document.documentElement.style.setProperty('--cols', COLS);
+      document.documentElement.style.setProperty('--rows', ROWS);
+
+      document.getElementById('scopeRes').innerText = `${COLS}x${ROWS}`;
+      document.getElementById('scopeChannels').innerText = `${TOTAL_PIXELS * 3} B`;
+      document.getElementById('topGridTelemetry').innerText = `${COLS}x${ROWS} (${TOTAL_PIXELS}px)`;
+
+      matrixDrops = Array.from({ length: COLS }, () => Math.floor(Math.random() * ROWS));
+      textPos = COLS;
+      showToast(`Topology calibrated: ${COLS}x${ROWS} (${TOTAL_PIXELS} pixels)`);
+    }
+
+    /* Tab Switching System */
+    function switchTab(tabId) {
+      document.querySelectorAll('.workspace-pane').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active', 'bg-neon-cyan/15', 'text-neon-cyan', 'border', 'border-neon-cyan/30');
+        btn.classList.add('text-studio-400');
+      });
+
+      const activePane = document.getElementById(tabId);
+      if (activePane) activePane.classList.remove('hidden');
+
+      const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.add('active', 'bg-neon-cyan/15', 'text-neon-cyan', 'border', 'border-neon-cyan/30');
+        activeBtn.classList.remove('text-studio-400');
+      }
+    }
+
+    function handleVideoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      video.src = URL.createObjectURL(file);
+      video.muted = true;
+      video.play().then(() => {
+        hasVideo = true;
+        isVideoPlaying = true;
+        document.getElementById('videoStatusIndicator').innerText = file.name.substring(0, 18).toUpperCase();
+        document.getElementById('videoStatusIndicator').className = "text-[10px] font-mono text-neon-green";
+        document.getElementById('deckPlayPauseBtn').innerText = "⏸ PAUSE";
+        document.getElementById('quickPlayLabel').innerText = "PAUSE MEDIA";
+        showToast("Video source loaded into Primary Deck");
+      }).catch(err => {
+        showToast("Tap Play to begin video stream");
+      });
+    }
+
+    function toggleVideoPlayback() {
+      if (!video.src) {
+        document.getElementById('videoFileInput').click();
+        return;
+      }
+      if (video.paused) {
+        video.play();
+        isVideoPlaying = true;
+        document.getElementById('deckPlayPauseBtn').innerText = "⏸ PAUSE";
+        document.getElementById('quickPlayLabel').innerText = "PAUSE MEDIA";
+      } else {
+        video.pause();
+        isVideoPlaying = false;
+        document.getElementById('deckPlayPauseBtn').innerText = "▶ PLAY";
+        document.getElementById('quickPlayLabel').innerText = "PLAY MEDIA";
+      }
+    }
+
+    function stopVideoPlayback() {
+      video.pause();
+      video.currentTime = 0;
+      hasVideo = false;
+      isVideoPlaying = false;
+      document.getElementById('videoStatusIndicator').innerText = "NO MEDIA LOADED";
+      document.getElementById('videoStatusIndicator').className = "text-[10px] font-mono text-studio-400";
+      document.getElementById('deckPlayPauseBtn').innerText = "▶ PLAY";
+      document.getElementById('quickPlayLabel').innerText = "PLAY MEDIA";
+      showToast("Video source cleared from Primary Deck");
+    }
+
+    function updateAspectMode(mode) {
+      showToast(`Aspect downscaler set to: ${mode.toUpperCase()}`);
+    }
+
+    function resetTextScroll() { textPos = COLS; }
+    function updateFontSize(val) { fontSize = parseInt(val); document.getElementById('fontSizeVal').innerText = `${val} px`; }
+    function updateTextYPos(val) { textYPercent = parseInt(val) / 100; document.getElementById('textYPosVal').innerText = `${val}%`; }
+    function updateTextSpeed(val) { textScrollSpeed = parseFloat(val); document.getElementById('textSpeedVal').innerText = `${val}x`; }
+
+    function toggleFxSlot(fxKey) {
+      activeFx[fxKey] = !activeFx[fxKey];
+      const btn = document.getElementById(`fxBtn-${fxKey}`);
+      if (activeFx[fxKey]) {
+        btn.className = "p-3 bg-neon-cyan/15 border border-neon-cyan text-neon-cyan rounded-lg text-left transition shadow-sm";
+        btn.querySelector('span:last-child').className = "w-2 h-2 rounded-full bg-neon-cyan";
+      } else {
+        btn.className = "p-3 bg-studio-800 border border-studio-700 text-studio-400 rounded-lg text-left transition hover:border-studio-600";
+        btn.querySelector('span:last-child').className = "w-2 h-2 rounded-full bg-studio-600";
+      }
+    }
+
+    function updateFxIntensity(val) {
+      fxIntensity = parseInt(val) / 100;
+      document.getElementById('fxIntensityVal').innerText = `${val}%`;
+    }
+
+    function updateFxSpeed(val) {
+      fxSpeed = parseFloat(val);
+      document.getElementById('fxSpeedVal').innerText = `${val}x`;
+    }
+
+    function computeProceduralFx() {
+      fxCtx.clearRect(0, 0, COLS, ROWS);
+      fxTime += 0.04 * fxSpeed;
+
+      const img = fxCtx.createImageData(COLS, ROWS);
+      const data = img.data;
+
+      // 1. Rainbow Spiral Wave
+      if (activeFx.rainbow) {
+        for (let y = 0; y < ROWS; y++) {
+          for (let x = 0; x < COLS; x++) {
+            let hue = ((x / COLS) * 0.7 + (y / ROWS) * 0.3 + fxTime * 0.3) % 1;
+            let rgb = hsvToRgb(hue, 1, fxIntensity);
+            let idx = (y * COLS + x) * 4;
+            data[idx] = Math.max(data[idx], rgb[0]);
+            data[idx + 1] = Math.max(data[idx + 1], rgb[1]);
+            data[idx + 2] = Math.max(data[idx + 2], rgb[2]);
+            data[idx + 3] = 255;
+          }
+        }
+      }
+
+      // 2. Plasma Wave
+      if (activeFx.plasma) {
+        for (let y = 0; y < ROWS; y++) {
+          for (let x = 0; x < COLS; x++) {
+            let v = Math.sin(x * 0.18 + fxTime) + Math.sin(y * 0.22 + fxTime) + Math.sin((x + y) * 0.12 + fxTime);
+            let hue = (v + 3) / 6;
+            let rgb = hsvToRgb(hue, 0.9, fxIntensity);
+            let idx = (y * COLS + x) * 4;
+            data[idx] = Math.min(255, data[idx] + rgb[0]);
+            data[idx + 1] = Math.min(255, data[idx + 1] + rgb[1]);
+            data[idx + 2] = Math.min(255, data[idx + 2] + rgb[2]);
+            data[idx + 3] = 255;
+          }
+        }
+      }
+
+      // 3. Fire Flame Simulation
+      if (activeFx.fire) {
+        for (let y = 0; y < ROWS; y++) {
+          for (let x = 0; x < COLS; x++) {
+            let heat = (Math.sin(x * 0.35 + fxTime * 2.5) + Math.cos(y * 0.25 - fxTime * 3.5) + 2) / 4;
+            let falloff = (ROWS - y) / ROWS;
+            let intensity = Math.min(1, heat * falloff * 1.6) * fxIntensity;
+            let idx = (y * COLS + x) * 4;
+            data[idx] = Math.min(255, data[idx] + Math.round(255 * intensity));
+            data[idx + 1] = Math.min(255, data[idx + 1] + Math.round(110 * intensity * intensity));
+            data[idx + 2] = Math.min(255, data[idx + 2] + Math.round(15 * intensity));
+            data[idx + 3] = 255;
+          }
+        }
+      }
+
+      // 4. Sparkles / Stars
+      if (activeFx.sparkle) {
+        for (let y = 0; y < ROWS; y++) {
+          for (let x = 0; x < COLS; x++) {
+            if (Math.random() > 0.97) {
+              let spark = Math.random() * fxIntensity;
+              let idx = (y * COLS + x) * 4;
+              data[idx] = Math.min(255, data[idx] + Math.round(255 * spark));
+              data[idx + 1] = Math.min(255, data[idx + 1] + Math.round(245 * spark));
+              data[idx + 2] = Math.min(255, data[idx + 2] + Math.round(255 * spark));
+              data[idx + 3] = 255;
+            }
+          }
+        }
+      }
+
+      // 5. Strobe Sync
+      if (activeFx.strobe) {
+        if (Math.sin(fxTime * 8) > 0.8) {
+          for (let i = 0; i < data.length; i += 4) {
+            data[i] = Math.min(255, data[i] + Math.round(180 * fxIntensity));
+            data[i + 1] = Math.min(255, data[i + 1] + Math.round(180 * fxIntensity));
+            data[i + 2] = Math.min(255, data[i + 2] + Math.round(180 * fxIntensity));
+            data[i + 3] = 255;
+          }
+        }
+      }
+
+      fxCtx.putImageData(img, 0, 0);
+
+      // 6. Matrix Phosphor Rain
+      if (activeFx.matrix) {
+        fxCtx.fillStyle = `rgba(0, 255, 70, ${fxIntensity * 0.9})`;
+        for (let i = 0; i < matrixDrops.length; i++) {
+          fxCtx.fillRect(i, matrixDrops[i], 1, 1);
+          if (matrixDrops[i] >= ROWS || Math.random() > 0.95) {
+            matrixDrops[i] = 0;
+          } else {
+            matrixDrops[i]++;
+          }
+        }
+      }
+    }
+
+    function hsvToRgb(h, s, v) {
+      let r, g, b, i = Math.floor(h * 6), f = h * 6 - i;
+      let p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s);
+      switch (i % 6) {
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+      }
+      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+    }
+
+    /* 3x3 Convolution Sharpening Algorithm */
+    function applySharpenKernel(ctxNode, w, h, strength) {
+      if (strength <= 0) return;
+      const imgData = ctxNode.getImageData(0, 0, w, h);
+      const src = imgData.data;
+      const copy = new Uint8ClampedArray(src);
+      const c = 1 + 4 * strength, n = -strength;
+
+      for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+          const idx = (y * w + x) * 4;
+          const top = ((y - 1) * w + x) * 4, btm = ((y + 1) * w + x) * 4;
+          const lft = (y * w + (x - 1)) * 4, rgt = (y * w + (x + 1)) * 4;
+          for (let ch = 0; ch < 3; ch++) {
+            let val = c * copy[idx + ch] + n * (copy[top + ch] + copy[btm + ch] + copy[lft + ch] + copy[rgt + ch]);
+            src[idx + ch] = val < 0 ? 0 : val > 255 ? 255 : val;
+          }
+        }
+      }
+      ctxNode.putImageData(imgData, 0, 0);
+    }
+
+    function updateMasterBrightness(val) {
+      masterDimmer = parseInt(val) / 100;
+      document.getElementById('masterBrightVal').innerText = `${val}% (${Math.round(masterDimmer * 255)})`;
+      computeGammaLut();
+    }
+
+    function toggleBlackout() {
+      isBlackout = !isBlackout;
+      const indicator = document.getElementById('blackoutIndicator');
+      const btn = document.getElementById('masterBlackoutBtn');
+      if (isBlackout) {
+        indicator.className = "w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ff0055]";
+        btn.className = "px-3 py-1.5 bg-red-950/80 border border-red-500 rounded-md text-xs font-mono font-bold text-red-300 transition flex items-center gap-1.5";
+        showToast("BLACKOUT ACTIVATED — All outputs shuttered");
+      } else {
+        indicator.className = "w-2 h-2 rounded-full bg-slate-500";
+        btn.className = "px-3 py-1.5 bg-studio-800 hover:bg-studio-700 border border-studio-600 rounded-md text-xs font-mono font-bold text-slate-300 transition flex items-center gap-1.5";
+        showToast("BLACKOUT RELEASED — Normal stream restored");
+      }
+      computeGammaLut();
+    }
+
+    function toggleOpticMesh() {
+      isDiodesEnabled = !isDiodesEnabled;
+      const mesh = document.getElementById('opticMeshOverlay');
+      const btn = document.getElementById('meshToggleBtn');
+      if (isDiodesEnabled) {
+        mesh.classList.remove('hidden');
+        btn.innerText = "LED DIODES: ON";
+        btn.classList.add('text-neon-cyan');
+      } else {
+        mesh.classList.add('hidden');
+        btn.innerText = "LED DIODES: OFF";
+        btn.classList.remove('text-neon-cyan');
+      }
+    }
+
+    function triggerStrobeHit() {
+      const orig = activeFx.strobe;
+      activeFx.strobe = true;
+      setTimeout(() => { activeFx.strobe = orig; }, 240);
+    }
+
+    function updateSharpen(val) {
+      sharpenFactor = parseFloat(val);
+      document.getElementById('sharpenVal').innerText = `${val}x (${val > 1 ? 'Crisp' : 'Soft'})`;
+    }
+
+    function updateGamma(val) {
+      gamma = parseFloat(val);
+      document.getElementById('gammaVal').innerText = parseFloat(val).toFixed(2);
+      computeGammaLut();
+    }
+
+    function updateContrast(val) {
+      contrastVal = parseInt(val);
+      document.getElementById('contrastVal').innerText = `${val}%`;
+    }
+
+    function updateSaturation(val) {
+      saturationVal = parseInt(val);
+      document.getElementById('saturationVal').innerText = `${val}%`;
+    }
+
+    function updateRgbTrim() {
+      rTrim = parseInt(document.getElementById('rGainSlider').value) / 100;
+      gTrim = parseInt(document.getElementById('gGainSlider').value) / 100;
+      bTrim = parseInt(document.getElementById('bGainSlider').value) / 100;
+      document.getElementById('rTrimVal').innerText = `${Math.round(rTrim * 100)}%`;
+      document.getElementById('gTrimVal').innerText = `${Math.round(gTrim * 100)}%`;
+      document.getElementById('bTrimVal').innerText = `${Math.round(bTrim * 100)}%`;
+      computeGammaLut();
+    }
+
+    function toggleMasterRecording() {
+      const btn1 = document.getElementById('masterRecBtn');
+      const label1 = document.getElementById('masterRecLabel');
+      const btn2 = document.getElementById('quickRecBtn');
+      const badge = document.getElementById('recordingBadge');
+
+      if (!isRecording) {
+        stopPlaybackRecorded();
+        isRecording = true;
+        recordedBuffer = [];
+        recordedWebmBlobs = [];
+        label1.innerText = "STOP & BAKE RECORDING";
+        btn1.className = "flex-1 py-2.5 bg-neon-amber text-black rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-2 shadow-lg shadow-neon-amber/30 transition";
+        btn2.className = "flex-1 py-2 bg-red-600 border border-red-500 text-white rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition recording-active";
+        badge.classList.remove('hidden');
+        document.getElementById('recScrubberDock').classList.add('hidden');
+
+        // Capture WebM video stream
+        const stream = exportCanvas.captureStream(30);
+        try {
+          recordedMediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8' });
+          recordedMediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedWebmBlobs.push(e.data); };
+          recordedMediaRecorder.start();
+        } catch (e) {
+          console.warn("WebM recording unsupported on this browser.");
+        }
+        showToast("RECORDING STARTED — Capturing all effects & video");
+      } else {
+        isRecording = false;
+        label1.innerText = "START MASTER RECORDING";
+        btn1.className = "flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-600/30 transition";
+        btn2.className = "flex-1 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-400 rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition";
+        badge.classList.add('hidden');
+
+        if (recordedMediaRecorder && recordedMediaRecorder.state !== "inactive") {
+          recordedMediaRecorder.stop();
+        }
+
+        setupRecordingScrubber();
+        showToast(`RECORDING COMPLETED — ${recordedBuffer.length} frames captured`);
+      }
+    }
+
+    function setupRecordingScrubber() {
+      if (recordedBuffer.length === 0) return;
+      const dock = document.getElementById('recScrubberDock');
+      dock.classList.remove('hidden');
+
+      const scrubber = document.getElementById('timelineScrubber');
+      scrubber.min = 0;
+      scrubber.max = recordedBuffer.length - 1;
+      scrubber.value = 0;
+      currentPlaybackIdx = 0;
+
+      document.getElementById('scrubFrameLabel').innerText = `Frame 1 / ${recordedBuffer.length}`;
+      document.getElementById('recEngineFrames').innerText = `BUFFER: ${recordedBuffer.length} FRAMES`;
+      startPlaybackRecorded();
+    }
+
+    function clearRecordedBuffer() {
+      stopPlaybackRecorded();
+      recordedBuffer = [];
+      recordedWebmBlobs = [];
+      document.getElementById('recScrubberDock').classList.add('hidden');
+      document.getElementById('recEngineFrames').innerText = "BUFFER: 0 FRAMES";
+      showToast("Recorded buffer memory cleared");
+    }
+
+    function renderScrubbedFrame(idx) {
+      if (!recordedBuffer[idx]) return;
+      const payload = recordedBuffer[idx];
+      const isSerpentine = document.getElementById('wiringPatternSelect').value === 'serpentine';
+
+      const img = ctx.createImageData(COLS, ROWS);
+      const data = img.data;
+
+      let inIdx = 0;
+      for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS; x++) {
+          let srcX = (isSerpentine && (y % 2 === 1)) ? (COLS - 1 - x) : x;
+          let targetPixel = (y * COLS + srcX) * 4;
+          data[targetPixel]     = payload[inIdx++];
+          data[targetPixel + 1] = payload[inIdx++];
+          data[targetPixel + 2] = payload[inIdx++];
+          data[targetPixel + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+
+      document.getElementById('timelineScrubber').value = idx;
+      document.getElementById('scrubFrameLabel').innerText = `Frame ${idx + 1} / ${recordedBuffer.length}`;
+
+      if (isStreamingRecorded && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(payload);
+        totalBytesSent += payload.length;
+      }
+    }
+
+    function onScrubTimeline(val) {
+      stopPlaybackRecorded();
+      currentPlaybackIdx = parseInt(val);
+      renderScrubbedFrame(currentPlaybackIdx);
+    }
+
+    function togglePlaybackRecorded() {
+      if (isPlaybackRecorded) {
+        stopPlaybackRecorded();
+      } else {
+        startPlaybackRecorded();
+      }
+    }
+
+    function startPlaybackRecorded() {
+      if (recordedBuffer.length === 0) return;
+      isPlaybackRecorded = true;
+      document.getElementById('recPlayPauseBtn').innerText = "⏸ PAUSE LOOP";
+      const fps = parseInt(document.getElementById('recPlaybackFps').value) || 30;
+
+      clearInterval(recordedPlaybackTimer);
+      recordedPlaybackTimer = setInterval(() => {
+        currentPlaybackIdx++;
+        if (currentPlaybackIdx >= recordedBuffer.length) {
+          currentPlaybackIdx = 0;
+        }
+        renderScrubbedFrame(currentPlaybackIdx);
+      }, 1000 / fps);
+    }
+
+    function stopPlaybackRecorded() {
+      isPlaybackRecorded = false;
+      clearInterval(recordedPlaybackTimer);
+      document.getElementById('recPlayPauseBtn').innerText = "▶ PLAY LOOP";
+    }
+
+    function updateRecFps(val) {
+      if (isPlaybackRecorded) startPlaybackRecorded();
+    }
+
+    function toggleStreamRecordedBuffer() {
+      isStreamingRecorded = !isStreamingRecorded;
+      const btn = document.getElementById('streamRecordedBtn');
+      if (isStreamingRecorded) {
+        btn.className = "px-3 py-1.5 bg-red-600 text-white border border-red-500 rounded text-xs font-mono font-bold";
+        btn.innerText = "⏹ STOP MATRIX STREAM";
+        if (!isPlaybackRecorded) startPlaybackRecorded();
+        showToast("Transmitting recorded buffer directly to Matrix");
+      } else {
+        btn.className = "px-3 py-1.5 bg-neon-green/10 hover:bg-neon-green/20 text-neon-green border border-neon-green/30 rounded text-xs font-mono font-bold";
+        btn.innerText = "⚡ RE-STREAM TO MATRIX";
+        showToast("Re-stream stopped");
+      }
+    }
+
+    function exportBinaryRGB() {
+      if (recordedBuffer.length === 0) {
+        showToast("Record a clip before exporting .BIN");
+        return;
+      }
+      const totalLen = recordedBuffer.reduce((acc, c) => acc + c.length, 0);
+      const merged = new Uint8Array(totalLen);
+      let offset = 0;
+      for (const chunk of recordedBuffer) {
+        merged.set(chunk, offset);
+        offset += chunk.length;
+      }
+      triggerBlobDownload(new Blob([merged], { type: 'application/octet-stream' }), `ledpixel_${COLS}x${ROWS}_${recordedBuffer.length}f.bin`);
+      showToast("Exported .BIN Raw RGB binary stream");
+    }
+
+    function exportControllerDat() {
+      if (recordedBuffer.length === 0) {
+        showToast("Record a clip before exporting .DAT");
+        return;
+      }
+      const frameLen = COLS * ROWS * 3;
+      const totalFrames = recordedBuffer.length;
+      const datBuffer = new Uint8Array(8 + totalFrames * frameLen);
+
+      // T-1000S / K-1000C frame header signature
+      datBuffer[0] = 0x55;
+      datBuffer[1] = 0xAA;
+      datBuffer[2] = totalFrames & 0xFF;
+      datBuffer[3] = (totalFrames >> 8) & 0xFF;
+      datBuffer[4] = (COLS * ROWS) & 0xFF;
+      datBuffer[5] = ((COLS * ROWS) >> 8) & 0xFF;
+      datBuffer[6] = 0x00;
+      datBuffer[7] = 0x00;
+
+      let offset = 8;
+      for (const chunk of recordedBuffer) {
+        datBuffer.set(chunk, offset);
+        offset += chunk.length;
+      }
+      triggerBlobDownload(new Blob([datBuffer], { type: 'application/octet-stream' }), `ledpixel_${COLS}x${ROWS}.dat`);
+      showToast("Exported .DAT controller file with frame headers");
+    }
+
+    function exportArduinoHeader() {
+      if (recordedBuffer.length === 0) {
+        showToast("Record a clip before exporting .H");
+        return;
+      }
+      const maxFrames = Math.min(recordedBuffer.length, 40);
+      let h = `// LED Pixel Hyderabad Pro Studio - C/C++ Header Data\n`;
+      h += `// Matrix: ${COLS}x${ROWS} (${COLS * ROWS} Pixels) | Frames: ${maxFrames}\n`;
+      h += `#pragma once\n#include <Arduino.h>\n\n`;
+      h += `const uint16_t MATRIX_WIDTH = ${COLS};\n`;
+      h += `const uint16_t MATRIX_HEIGHT = ${ROWS};\n`;
+      h += `const uint16_t FRAME_COUNT = ${maxFrames};\n\n`;
+      h += `const uint8_t PROGMEM matrix_anim[${maxFrames}][${COLS * ROWS * 3}] = {\n`;
+
+      for (let f = 0; f < maxFrames; f++) {
+        h += `  { `;
+        const fData = recordedBuffer[f];
+        for (let i = 0; i < fData.length; i++) {
+          h += `0x${fData[i].toString(16).padStart(2, '0')}${i === fData.length - 1 ? '' : ','}`;
+        }
+        h += ` }${f === maxFrames - 1 ? '' : ','}\n`;
+      }
+      h += `};\n`;
+
+      triggerBlobDownload(new Blob([h], { type: 'text/plain' }), `ledpixel_animation.h`);
+      showToast("Exported Arduino C++ PROGMEM Header (.h)");
+    }
+
+    function exportWebMVideo() {
+      if (recordedWebmBlobs.length === 0) {
+        showToast("WebM stream buffer is empty or unsupported on this device");
+        return;
+      }
+      const blob = new Blob(recordedWebmBlobs, { type: 'video/webm' });
+      triggerBlobDownload(blob, `ledpixel_${COLS}x${ROWS}_render.webm`);
+      showToast("Exported HD .WEBM Video File");
+    }
+
+    function exportJsonMetadata() {
+      const meta = {
+        studio: "LED Pixel Hyderabad Pro Studio",
+        version: "4.2",
+        officialChannel: "https://youtube.com/@ledpixelhyderabad2?si=N-zoJ5xLPl5pUw9y",
+        matrix: {
+          cols: COLS,
+          rows: ROWS,
+          totalPixels: TOTAL_PIXELS,
+          wiring: document.getElementById('wiringPatternSelect').value,
+          origin: document.getElementById('dataOriginSelect').value
+        },
+        calibration: {
+          gamma: gamma,
+          sharpen: sharpenFactor,
+          contrast: contrastVal,
+          saturation: saturationVal,
+          rgbTrim: { red: rTrim, green: gTrim, blue: bTrim }
+        },
+        recordedFrames: recordedBuffer.length,
+        timestamp: new Date().toISOString()
+      };
+      triggerBlobDownload(new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' }), `ledpixel_${COLS}x${ROWS}_project.json`);
+      showToast("Exported .JSON Project Metadata");
+    }
+
+    function triggerBlobDownload(blob, filename) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }
+
+    function toggleWebSocketLink() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+        return;
+      }
+
+      const ip = document.getElementById('networkIpInput').value.trim();
+      const port = document.getElementById('networkPortInput').value.trim();
+      const btn = document.getElementById('networkConnectBtn');
+      const topStatus = document.getElementById('topLinkStatus');
+
+      btn.innerText = "CONNECTING TO GATEWAY...";
+      btn.className = "w-full py-2.5 bg-neon-amber text-black rounded-lg font-mono font-bold text-xs uppercase tracking-wider transition";
+
+      try {
+        ws = new WebSocket(`ws://${ip}:${port}`);
+        ws.binaryType = "arraybuffer";
+
+        ws.onopen = () => {
+          btn.innerText = "DISCONNECT FROM ESP32";
+          btn.className = "w-full py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg font-mono font-bold text-xs uppercase tracking-wider transition";
+          topStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-neon-green shadow-[0_0_8px_#00ff66]"></span> ONLINE';
+          topStatus.className = "font-bold text-neon-green flex items-center gap-1";
+          showToast(`Connected to ESP32 Matrix at ${ip}:${port}`);
+        };
+
+        ws.onclose = () => {
+          btn.innerText = "CONNECT TO ESP32 MATRIX";
+          btn.className = "w-full py-2.5 bg-neon-cyan text-black rounded-lg font-mono font-bold text-xs uppercase tracking-wider hover:bg-white transition";
+          topStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> STANDALONE';
+          topStatus.className = "font-bold text-red-400 flex items-center gap-1";
+          showToast("WebSocket disconnected from controller");
+        };
+
+        ws.onerror = () => {
+          btn.innerText = "CONNECT TO ESP32 MATRIX";
+          btn.className = "w-full py-2.5 bg-neon-cyan text-black rounded-lg font-mono font-bold text-xs uppercase tracking-wider hover:bg-white transition";
+          showToast("Failed to reach ESP32 IP. Ensure phone is on ESP32 Wi-Fi.");
+        };
+      } catch (err) {
+        showToast("Invalid WebSocket Address");
+      }
+    }
+
+    function masterRenderLoop(timestamp) {
+      if (!isStreamingRecorded) {
+        // Step 1: Render Video or Base Canvas Shutter
+        if (hasVideo && video.readyState >= 2 && !video.paused) {
+          offCtx.filter = `contrast(${contrastVal}%) saturate(${saturationVal}%)`;
+          const mode = document.getElementById('aspectModeSelect').value;
+
+          if (mode === "stretch") {
+            offCtx.drawImage(video, 0, 0, COLS, ROWS);
+          } else {
+            offCtx.fillStyle = "#000000";
+            offCtx.fillRect(0, 0, COLS, ROWS);
+            const vW = video.videoWidth, vH = video.videoHeight;
+            const scale = mode === "cover" ? Math.max(COLS / vW, ROWS / vH) : Math.min(COLS / vW, ROWS / vH);
+            const dW = vW * scale, dH = vH * scale;
+            offCtx.drawImage(video, (COLS - dW) / 2, (ROWS - dH) / 2, dW, dH);
+          }
+          offCtx.filter = "none";
+          applySharpenKernel(offCtx, COLS, ROWS, sharpenFactor);
+        } else {
+          offCtx.fillStyle = "#000000";
+          offCtx.fillRect(0, 0, COLS, ROWS);
+        }
+
+        // Step 2: Stackable Multi-Effects Layer
+        const hasActiveEffects = Object.values(activeFx).some(Boolean);
+        if (hasActiveEffects) {
+          computeProceduralFx();
+          offCtx.save();
+          offCtx.globalCompositeOperation = document.getElementById('fxBlendModeSelect').value;
+          offCtx.drawImage(fxCanvas, 0, 0, COLS, ROWS);
+          offCtx.restore();
+        }
+
+        // Step 3: Typography Layer
+        const message = document.getElementById('liveTextInput').value.trim();
+        if (message.length > 0) {
+          offCtx.font = `900 ${fontSize}px "JetBrains Mono", Impact, sans-serif`;
+          offCtx.textBaseline = 'middle';
+          const yPos = ROWS * textYPercent;
+
+          if (document.getElementById('textOutlineSelect').value === 'black-stroke') {
+            offCtx.strokeStyle = "#000000";
+            offCtx.lineWidth = 3;
+            offCtx.strokeText(message, textPos, yPos);
+          }
+          offCtx.fillStyle = document.getElementById('textColorPicker').value;
+          offCtx.fillText(message, textPos, yPos);
+
+          textPos -= textScrollSpeed;
+          if (textPos < -offCtx.measureText(message).width) textPos = COLS;
+        }
+
+        // Step 4: Extract Raw Pixels & Apply Calibration LUT
+        const rawData = offCtx.getImageData(0, 0, COLS, ROWS).data;
+        const payload = new Uint8Array(TOTAL_PIXELS * 3);
+        const isSerpentine = document.getElementById('wiringPatternSelect').value === 'serpentine';
+
+        let outIdx = 0;
+        for (let y = 0; y < ROWS; y++) {
+          for (let x = 0; x < COLS; x++) {
+            let srcX = (isSerpentine && (y % 2 === 1)) ? (COLS - 1 - x) : x;
+            let srcIdx = (y * COLS + srcX) * 4;
+
+            payload[outIdx++] = lutR[rawData[srcIdx]];
+            payload[outIdx++] = lutG[rawData[srcIdx + 1]];
+            payload[outIdx++] = lutB[rawData[srcIdx + 2]];
+          }
+        }
+
+        // Step 5: Mirror Calibrated Buffer to Program Out Screen
+        const previewImg = ctx.createImageData(COLS, ROWS);
+        for (let i = 0; i < rawData.length; i += 4) {
+          previewImg.data[i]     = lutR[rawData[i]];
+          previewImg.data[i + 1] = lutG[rawData[i + 1]];
+          previewImg.data[i + 2] = lutB[rawData[i + 2]];
+          previewImg.data[i + 3] = 255;
+        }
+        ctx.putImageData(previewImg, 0, 0);
+
+        // Step 6: Mirror to High-Resolution Canvas for HD WebM Export
+        exportCtx.imageSmoothingEnabled = false;
+        exportCtx.drawImage(canvas, 0, 0, exportCanvas.width, exportCanvas.height);
+
+        // Step 7: Record Buffer Frame if Active
+        if (isRecording) {
+          recordedBuffer.push(new Uint8Array(payload));
+          document.getElementById('recEngineFrames').innerText = `BUFFER: ${recordedBuffer.length} FRAMES`;
+        }
+
+        // Step 8: Transmit to Physical Controller over WebSocket
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(payload);
+          totalBytesSent += payload.length;
+        }
+      }
+
+      // Step 9: Telemetry Metrics & FPS Engine
+      frameCount++;
+      if (timestamp - lastFpsTime >= 1000) {
+        currentFps = frameCount;
+        document.getElementById('topFpsTelemetry').innerText = `${currentFps.toFixed(1)} FPS`;
+        document.getElementById('scopeFps').innerText = `${currentFps.toFixed(1)} FPS`;
+
+        const kbps = (totalBytesSent / 1024).toFixed(1);
+        document.getElementById('topBitrateTelemetry').innerText = `${kbps} KB/s`;
+        totalBytesSent = 0;
+
+        // Simulated VU Meter animation
+        const vuA = Math.min(95, 30 + Math.random() * 55);
+        const vuB = Math.min(95, 25 + Math.random() * 50);
+        document.getElementById('vuMeterA').style.width = `${vuA}%`;
+        document.getElementById('vuMeterB').style.width = `${vuB}%`;
+
+        // Update video timestamps
+        if (hasVideo && video.duration) {
+          const cur = formatTime(video.currentTime);
+          const dur = formatTime(video.duration);
+          document.getElementById('videoMetaDisplay').innerText = `${cur} / ${dur}`;
+        }
+
+        frameCount = 0;
+        lastFpsTime = timestamp;
+      }
+
+      setTimeout(() => { requestAnimationFrame(masterRenderLoop); }, 30);
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = Math.floor(sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    /* Studio Notification Toast System */
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = document.getElementById('studioToast');
+      document.getElementById('toastMessage').innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    /* Launch Application */
+    window.addEventListener('DOMContentLoaded', () => {
+      reconfigureMatrixTopology();
+      requestAnimationFrame(masterRenderLoop);
+      showToast("LED Pixel Hyderabad Pro Studio Online");
+    });
+  </script>
+</body>
+</html>
